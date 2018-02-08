@@ -1,0 +1,29 @@
+{
+    "states": {
+        "DISARMED": {
+            "transitions": [
+                { "event": "ARM", "next_state": "ENTER_CODE", "action": "Log('Attempting to arm')" }
+            ],
+            "entry_action": "Log('Disarmed')"
+        },
+        "ENTER_CODE": {
+            "transitions": [
+                { "event": "USER_CODE", "condition": "ValidateCode(code)", "next_state": "SEND_OK_RESPONSE" },
+                { "event": "USER_CODE", "next_state": "SEND_ERROR_RESPONSE" } 
+            ]
+        },
+        "SEND_OK_RESPONSE": {
+            "transitions": [
+                { "next_state": "ARMED", "action": "SendResponse('OK')" }
+            ]
+        },
+        "SEND_ERROR_RESPONSE": {
+            "transitions": [
+                { "next_state": "ENTER_CODE", "action": "SendResponse('ERROR')" }
+            ]
+        },
+        "ARMED": {
+            "entry_action": "Log('Armed')"
+        }
+    }
+}

@@ -52,15 +52,4 @@ class Transition:
         return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
 
 sm = StateMachine()
-
-disarmed_state = State("DISARMED")
-armed_state = State("ARMED")
-
-arm_transition = Transition(to_state = armed_state)
-disarm_transition = Transition(to_state = disarmed_state)
-
-disarmed_state.add_transition(arm_transition)
-armed_state.add_transition(disarm_transition)
-
-#print(disarmed_state)
 print(sm)

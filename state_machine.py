@@ -5,6 +5,7 @@ import pprint
 class StateMachine:
     def __init__(self, config_file = 'state_machine_config.json'):
         self.states = []
+        self.current_state = None
         self.sm_dict = self.load(config_file)
 
     def load(self, config_file):
@@ -24,6 +25,18 @@ class StateMachine:
                         to_state = self.find_state(t.get('to_state'))
                         )
                 from_state.add_transition(transition)
+            # TODO Consider entry events
+
+        self.current_state = self.find_state(config_dict.get('initial_state'))
+        print("Initial state: {}".format(self.current_state))
+
+    def update(self, event):
+        print("Updating from {}".format(self.current_state))
+        for transition in self.current_state.transitions:
+            if transition.event == event:
+                print("Event {} found, transitioning")
+                self.current_state = transition.to_state
+        print("Current state: {}".format(self.current_state))
 
     def find_state(self, name = None):
         if name:
@@ -56,3 +69,4 @@ class Transition:
 
 sm = StateMachine()
 print(sm)
+sm.update("ARM")

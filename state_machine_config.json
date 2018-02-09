@@ -25,5 +25,7 @@
         "ARMED": {
             "entry_action": "Log('Armed')"
         }
-    }
+    },
+
+    "initial_state": "DISARMED"
 }

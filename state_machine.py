@@ -30,11 +30,11 @@ class StateMachine:
         self.current_state = self.find_state(config_dict.get('initial_state'))
         print("Initial state: {}".format(self.current_state))
 
-    def update(self, event):
+    def handle_event(self, event):
         print("Updating from {}".format(self.current_state))
         for transition in self.current_state.transitions:
             if transition.event == event:
-                print("Event {} found, transitioning")
+                print("Event {} found, transitioning".format(event))
                 self.current_state = transition.to_state
         print("Current state: {}".format(self.current_state))
 
@@ -69,4 +69,4 @@ class Transition:
 
 sm = StateMachine()
 print(sm)
-sm.update("ARM")
+sm.handle_event("ARM")

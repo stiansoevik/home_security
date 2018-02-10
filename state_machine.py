@@ -1,21 +1,26 @@
 #!/usr/bin/python
 import json
-import pprint
+import logging
+
+logging.basicConfig(level = logging.DEBUG)
 
 class StateMachine:
     def __init__(self, config_file = 'state_machine_config.json'):
+        logging.debug("Initializing state machine")
         self.states = []
         self.current_state = None
         self.sm_dict = self.load(config_file)
 
     def load(self, config_file):
+        logging.debug("Loading {}".format(config_file))
         with open(config_file) as file:
             config_dict = json.loads(file.read())
 
         # Create all states first, so transitions can find a valid state
+        logging.debug("Creating states")
         self.states = [State(name) for name in config_dict.get('states', [])]
 
-        # Add properties
+        logging.debug("Adding properties to states")
         for state_name, properties in config_dict.get('states', []).iteritems():
             from_state = self.find_state(state_name)
             for t in properties.get('transitions', []):
@@ -31,7 +36,7 @@ class StateMachine:
         print("Initial state: {}".format(self.current_state))
 
     def handle_event(self, event):
-        print("Updating from {}".format(self.current_state))
+        logging.info("Handling event: {}".format(event))
         for transition in self.current_state.transitions:
             if transition.event == event:
                 print("Event {} found, transitioning".format(event))
@@ -44,7 +49,7 @@ class StateMachine:
         return None
 
     def __str__(self):
-        return "\n".join([str(s) for s in self.states])
+        return "State machine with states: " + ", ".join([str(s) for s in self.states])
 
 
 class State:
@@ -56,7 +61,7 @@ class State:
         self.transitions.append(transition)
 
     def __str__(self):
-        return "{}:\n{}".format(self.name, "\n".join([str(s) for s in self.transitions]))
+        return self.name
 
 class Transition:
     def __init__(self, event = None, condition = None, to_state = None):
@@ -68,5 +73,4 @@ class Transition:
         return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
 
 sm = StateMachine()
-print(sm)
 sm.handle_event("ARM")

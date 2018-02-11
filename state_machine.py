@@ -24,13 +24,22 @@ class StateMachine:
         for state_name, properties in config_dict.get('states', []).iteritems():
             from_state = self.find_state(state_name)
             for t in properties.get('transitions', []):
+                a = t.get('action')
+                if a:
+                    action = Action(
+                        log = a.get('log'),
+                        validate_code = a.get('validate_code'),
+                        send_response = a.get('send_response')
+                    )
+                else:
+                    action = None
                 transition = Transition(
                         event = t.get('event'),
                         condition = t.get('condition'),
-                        to_state = self.find_state(t.get('to_state'))
-                        )
+                        to_state = self.find_state(t.get('to_state')),
+                        action = action
+                )
                 from_state.add_transition(transition)
-            # TODO Consider entry events
 
         initial_state = config_dict.get('initial_state')
         logging.debug("Initial state: {}".format(initial_state))
@@ -44,10 +53,6 @@ class StateMachine:
         response = self.current_state.handle_event(event, param)
         self.set_state(response.next_state)
         return response
-
-    def handle_actions(self, actions):
-        if 'log' in actions:
-            print("LOG: {}".format(actions.log))
 
     def find_state(self, name = None):
         if name:
@@ -70,21 +75,9 @@ class State:
         logging.info("Handling event: {}".format(event))
         for transition in self.transitions:
             if transition.event == event:
-                # Move condition checking etc to Transition class?
-                logging.debug("Event {} found, checking condition {}".format(event, transition.condition))
-                if not transition.condition:
-                    logging.debug("No condition, OK")
-                    return TransitionResult(next_state = transition.to_state)
-                else:
-                    logging.debug("Checking condition {}".format(transition.condition))
-                    if transition.condition.execute():
-                        logging.debug("Condition satisfied")
-                        return TransitionResult(next_state = transition.to_state)
-                    else:
-                        logging.debug("Condition not satisfied")
-                        # No return, continuing to next transition
-
-                result = self.handle_actions
+                if transition.check_condition():
+                    return transition.go()
+        logging.warning("No matching event handlers found")
                 # handle_event: finn passende event, sjekk conditions
                 # transist (?): utf0r transisjonsaction, bytt tilstand
                 # Transition.check_condition(param)?
@@ -94,10 +87,25 @@ class State:
         return self.name
 
 class Transition:
-    def __init__(self, event = None, condition = None, to_state = None):
+    def __init__(self, event = None, condition = None, to_state = None, action = None):
         self.event = event
         self.condition = condition
         self.to_state = to_state
+        self.action = action
+
+    def check_condition(self):
+        logging.debug("Checking condition {}".format(self.condition))
+        if not self.condition:
+            logging.debug("No condition, OK")
+            return True
+        else:
+            result = self.condition.execute(None)
+            logging.debug("Condition returned {}".format(result))
+            return result
+
+    def go(self):
+        action_result = self.action.execute(None)
+        return TransitionResult(self.to_state, action_result)
 
     def __str__(self):
         return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
@@ -113,13 +121,14 @@ class Action:
         self.validate_code = validate_code
         self.send_response = send_response
 
-    def do(param):
+    def execute(self, param):
         if self.log:
-            logging.info(self.log)
+            print(self.log)
+            return None
         if self.validate_code:
             return self.validate_code == param
         if self.send_response:
-            return 
+            return self.send_response
 
 sm = StateMachine()
 sm.update("ARM")

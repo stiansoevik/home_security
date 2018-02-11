@@ -3,8 +3,7 @@
         "DISARMED": {
             "transitions": [
                 { "event": "ARM", "to_state": "ENTER_CODE", "action": { "log": "Attempting to arm" } }
-            ],
-            "entry_action": "Log('Disarmed')"
+            ]
         },
         "ENTER_CODE": {
             "transitions": [

@@ -22,7 +22,6 @@
             ]
         },
         "ARMED": {
-            "entry_action": { "log": "Armed" }
         }
     },
 

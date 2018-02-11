@@ -6,70 +6,39 @@ logging.basicConfig(level = logging.DEBUG)
 
 class StateMachine:
     def __init__(self, config_file = 'state_machine_config.json'):
-        logging.debug("Initializing state machine")
-        self.states = []
+        logging.info("Initializing state machine")
+        self.states = {}
         self.current_state = None
-        self.sm_dict = self.load(config_file)
+        self.load(config_file)
 
     def load(self, config_file):
-        logging.debug("Loading {}".format(config_file))
+        logging.info("Loading configuration from file {}".format(config_file))
         with open(config_file) as file:
             config_dict = json.loads(file.read())
-
-        # Create all states first, so transitions can find a valid state
-        logging.debug("Creating states")
-        self.states = [State(name) for name in config_dict.get('states', [])]
-
-        logging.debug("Adding properties to states")
-        for state_name, properties in config_dict.get('states', []).iteritems():
-            from_state = self.find_state(state_name)
-            for t in properties.get('transitions', []):
-                a = t.get('action')
-                if a:
-                    action = Action(
-                        log = a.get('log'),
-                        validate_code = a.get('validate_code'),
-                        send_response = a.get('send_response')
-                    )
-                else:
-                    action = None
-                transition = Transition(
-                        event = t.get('event'),
-                        condition = t.get('condition'),
-                        to_state = self.find_state(t.get('to_state')),
-                        action = action
-                )
-                from_state.add_transition(transition)
-
-        initial_state = config_dict.get('initial_state')
-        logging.debug("Initial state: {}".format(initial_state))
-        self.set_state(self.find_state(initial_state))
+        for name, properties in config_dict.get('states').iteritems():
+            logging.debug("Adding state {} with properties {}".format(name, properties))
+            state = State(name)
+            state.transitions = [Transition(**transition_dict) for transition_dict in properties.get('transitions', [])]
+            self.states[name] = state
+        self.set_state(config_dict.get('initial_state'))
 
     def set_state(self, state):
         logging.info("Transitioning from {} to {}".format(self.current_state, state))
-        self.current_state = state
+        self.current_state = self.states[state]
 
     def update(self, event, param = None):
         response = self.current_state.handle_event(event, param)
         self.set_state(response.next_state)
         return response
 
-    def find_state(self, name = None):
-        if name:
-            return [s for s in self.states if s.name == name][0] or None
-        return None
-
     def __str__(self):
         return "State machine with states: " + ", ".join([str(s) for s in self.states])
 
-
 class State:
     def __init__(self, name):
+        logging.debug("Creating state {}".format(name))
         self.name = name
         self.transitions = []
-
-    def add_transition(self, transition):
-        self.transitions.append(transition)
 
     def handle_event(self, event, param = None):
         logging.info("Handling event: {}".format(event))
@@ -78,25 +47,22 @@ class State:
                 if transition.check_condition():
                     return transition.go()
         logging.warning("No matching event handlers found")
-                # handle_event: finn passende event, sjekk conditions
-                # transist (?): utf0r transisjonsaction, bytt tilstand
-                # Transition.check_condition(param)?
-                # Transition.do_action?
 
     def __str__(self):
         return self.name
 
 class Transition:
     def __init__(self, event = None, condition = None, to_state = None, action = None):
+        logging.debug("Creating transition @{} [{}] -> {}, {}".format(event, condition, to_state, action))
         self.event = event
-        self.condition = condition
+        self.condition = Action(**condition) if condition else None
         self.to_state = to_state
-        self.action = action
+        self.action = Action(**action) if action else None
 
     def check_condition(self):
         logging.debug("Checking condition {}".format(self.condition))
         if not self.condition:
-            logging.debug("No condition, OK")
+            logging.debug("No condition")
             return True
         else:
             result = self.condition.execute(None)
@@ -104,7 +70,7 @@ class Transition:
             return result
 
     def go(self):
-        action_result = self.action.execute(None)
+        action_result = self.action.execute(None) if self.action else None
         return TransitionResult(self.to_state, action_result)
 
     def __str__(self):
@@ -129,6 +95,9 @@ class Action:
             return self.validate_code == param
         if self.send_response:
             return self.send_response
+
+    def __str__(self):
+        return "log: {}, validate_code: {}, send_response: {}".format(self.log, self.validate_code, self.send_response)
 
 sm = StateMachine()
 sm.update("ARM")

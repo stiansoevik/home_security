@@ -7,7 +7,7 @@
         },
         "ENTER_CODE": {
             "transitions": [
-                { "event": "USER_CODE", "condition": { "validate_code": true }, "to_state": "SEND_OK_RESPONSE" },
+                { "event": "USER_CODE", "condition": { "validate_code": 1234 }, "to_state": "SEND_OK_RESPONSE" },
                 { "event": "USER_CODE", "to_state": "SEND_ERROR_RESPONSE" }
             ]
         },

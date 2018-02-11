@@ -26,10 +26,11 @@ class StateMachine:
         logging.info("Transitioning from {} to {}".format(self.current_state, state))
         self.current_state = self.states[state]
 
-    def update(self, event, param = None):
+    def update(self, event = None, param = None):
         response = self.current_state.handle_event(event, param)
-        self.set_state(response.next_state)
-        return response
+        if response:
+            self.set_state(response.next_state)
+            return response
 
     def __str__(self):
         return "State machine with states: " + ", ".join([str(s) for s in self.states])
@@ -44,8 +45,8 @@ class State:
         logging.info("Handling event: {}".format(event))
         for transition in self.transitions:
             if transition.event == event:
-                if transition.check_condition():
-                    return transition.go()
+                if transition.check_condition(param):
+                    return transition.go(param)
         logging.warning("No matching event handlers found")
 
     def __str__(self):
@@ -59,18 +60,18 @@ class Transition:
         self.to_state = to_state
         self.action = Action(**action) if action else None
 
-    def check_condition(self):
+    def check_condition(self, param):
         logging.debug("Checking condition {}".format(self.condition))
         if not self.condition:
             logging.debug("No condition")
             return True
         else:
-            result = self.condition.execute(None)
+            result = self.condition.execute(param)
             logging.debug("Condition returned {}".format(result))
             return result
 
-    def go(self):
-        action_result = self.action.execute(None) if self.action else None
+    def go(self, param):
+        action_result = self.action.execute(param) if self.action else None
         return TransitionResult(self.to_state, action_result)
 
     def __str__(self):
@@ -102,3 +103,4 @@ class Action:
 sm = StateMachine()
 sm.update("ARM")
 sm.update("USER_CODE", 1234)
+sm.update()

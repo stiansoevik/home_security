@@ -1,4 +1,8 @@
 #!/usr/bin/python
+# TODO Return response on all requests (even failed ones), include current state
+# TODO Support multiple transitions? How should responses work etc?
+# TODO Store PIN outside configuration file?
+# TODO Determine HTTP responses for all requests (e.g. 200, 401 etc)
 import json
 import logging
 
@@ -29,8 +33,11 @@ class StateMachine:
     def update(self, event = None, param = None):
         response = self.current_state.handle_event(event, param)
         if response:
+            logging.info("Response: {}".format(response))
             self.set_state(response.next_state)
             return response
+        else:
+            return TransitionResult(next_state = self.current_state)
 
     def __str__(self):
         return "State machine with states: " + ", ".join([str(s) for s in self.states])
@@ -61,7 +68,7 @@ class Transition:
         self.action = Action(**action) if action else None
 
     def check_condition(self, param):
-        logging.debug("Checking condition {}".format(self.condition))
+        logging.debug("Checking condition {} with param {}".format(self.condition, param))
         if not self.condition:
             logging.debug("No condition")
             return True
@@ -82,6 +89,9 @@ class TransitionResult:
         self.next_state = next_state
         self.response_text = response_text
 
+    def __str__(self):
+        return "Transition result: Next state: {}, Response text: {}".format(self.next_state, self.response_text)
+
 class Action:
     def __init__(self, log = None, validate_code = None, send_response = None):
         self.log = log
@@ -100,7 +110,3 @@ class Action:
     def __str__(self):
         return "log: {}, validate_code: {}, send_response: {}".format(self.log, self.validate_code, self.send_response)
 
-sm = StateMachine()
-sm.update("ARM")
-sm.update("USER_CODE", 1234)
-sm.update()

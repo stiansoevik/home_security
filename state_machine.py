@@ -3,6 +3,9 @@
 # TODO Support multiple transitions? How should responses work etc?
 # TODO Store PIN outside configuration file?
 # TODO Determine HTTP responses for all requests (e.g. 200, 401 etc)
+# TODO Support configurable log levels
+# TODO Explicit transition priority?
+
 import json
 import logging
 
@@ -33,7 +36,7 @@ class StateMachine:
     def update(self, event = None, param = None):
         response = self.current_state.handle_event(event, param)
         if response:
-            logging.info("Response: {}".format(response))
+            logging.info(str(response))
             self.set_state(response.next_state)
             return response
         else:
@@ -68,29 +71,29 @@ class Transition:
         self.action = Action(**action) if action else None
 
     def check_condition(self, param):
-        logging.debug("Checking condition {} with param {}".format(self.condition, param))
         if not self.condition:
-            logging.debug("No condition")
+            logging.debug("No condition, OK")
             return True
         else:
             result = self.condition.execute(param)
-            logging.debug("Condition returned {}".format(result))
+            logging.debug("Checking condition {} ({}): {}".format(self.condition, param, result))
             return result
 
     def go(self, param):
         action_result = self.action.execute(param) if self.action else None
-        return TransitionResult(self.to_state, action_result)
+        return Response(self.to_state, action_result)
 
     def __str__(self):
         return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
 
-class TransitionResult:
-    def __init__(self, next_state = None, response_text = None):
+class Response:
+    def __init__(self, next_state = None, message = None, success = None):
         self.next_state = next_state
-        self.response_text = response_text
+        self.message = message
+        self.success = success
 
     def __str__(self):
-        return "Transition result: Next state: {}, Response text: {}".format(self.next_state, self.response_text)
+        return "Response: Next state: {}, Message: {}, Success: {}".format(self.next_state, self.message, self.success)
 
 class Action:
     def __init__(self, log = None, validate_code = None, send_response = None):

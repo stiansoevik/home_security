@@ -10,7 +10,12 @@ def send_event(event):
         param = flask.request.get_json().get('param')
     else:
         param = None
-    result = sm.update(event, param)
-    return result.response_text or "No response"
+    response = sm.update(event, param)
+    if response.success:
+        code = 200
+    else:
+        code = 400 # TODO Consider more fine-grained response codes
+
+    return flask.json.jsonify(state=response.next_state, message=response.message), code
 
 

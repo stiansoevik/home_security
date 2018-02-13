@@ -40,7 +40,7 @@ class StateMachine:
             self.set_state(response.next_state)
             return response
         else:
-            return TransitionResult(next_state = self.current_state)
+            return Response(next_state = self.current_state)
 
     def __str__(self):
         return "State machine with states: " + ", ".join([str(s) for s in self.states])

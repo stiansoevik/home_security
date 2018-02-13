@@ -1,0 +1,29 @@
+{
+    "states": {
+        "DISARMED": {
+            "transitions": [
+                { "event": "ARM", "to_state": "ENTER_CODE", "action": { "log": "Attempting to arm" } }
+            ]
+        },
+        "ENTER_CODE": {
+            "transitions": [
+                { "event": "USER_CODE", "condition": { "validate_code": 1234 }, "to_state": "SEND_OK_RESPONSE" },
+                { "event": "USER_CODE", "to_state": "SEND_ERROR_RESPONSE" }
+            ]
+        },
+        "SEND_OK_RESPONSE": {
+            "transitions": [
+                { "to_state": "ARMED", "action": { "send_response": "OK" } }
+            ]
+        },
+        "SEND_ERROR_RESPONSE": {
+            "transitions": [
+                { "to_state": "ENTER_CODE", "action": { "send_response": "ERROR" } }
+            ]
+        },
+        "ARMED": {
+        }
+    },
+
+    "initial_state": "DISARMED"
+}

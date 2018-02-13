@@ -14,8 +14,7 @@ def send_event(event):
     else:
         param = None
 
-    response = sm.update(event, param)
-    logging.debug("API: " + str(response))
+    response = sm.handle_event(event, param)
 
     if response.success:
         code = 200

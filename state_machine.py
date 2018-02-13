@@ -31,6 +31,18 @@ class StateMachine:
         logging.info("Transitioning from {} to {}".format(self.current_state, state))
         self.current_state = self.states[state]
 
+    def handle_event(self, event = None, param = None):
+        # Pass incoming event
+        response = self.update(event, param)
+
+        # If next state can transition with no event and no conditions, continue
+        logging.debug("Checking for auto transitions")
+        while self.current_state.is_auto_transitioning():
+            logging.info("Auto transitioning")
+            response = self.update()
+
+        return response # Return last response
+
     def update(self, event = None, param = None):
         response = self.current_state.handle_event(event, param)
         logging.info(str(response))
@@ -54,6 +66,12 @@ class State:
                 return transition.go(param)
         logging.warning("No matching event handlers found")
         return Response(state = self.name, message = "Invalid event", success = False)
+
+    def is_auto_transitioning(self):
+        for transition in self.transitions:
+            if transition.check(None, None):
+                return True
+        return False
 
     def __str__(self):
         return self.name

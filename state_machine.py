@@ -35,12 +35,10 @@ class StateMachine:
 
     def update(self, event = None, param = None):
         response = self.current_state.handle_event(event, param)
-        if response:
-            logging.info(str(response))
+        logging.info(str(response))
+        if response.success:
             self.set_state(response.state)
-            return response
-        else:
-            return Response(state = self.current_state)
+        return response
 
     def __str__(self):
         return "State machine with states: " + ", ".join([str(s) for s in self.states])
@@ -58,6 +56,7 @@ class State:
                 if transition.check_condition(param):
                     return transition.go(param)
         logging.warning("No matching event handlers found")
+        return Response(state = self.name, message = "Invalid event", success = False)
 
     def __str__(self):
         return self.name
@@ -81,7 +80,7 @@ class Transition:
 
     def go(self, param):
         action_result = self.action.execute(param) if self.action else None
-        return Response(self.to_state, action_result)
+        return Response(state = self.to_state, message = action_result, success = True)
 
     def __str__(self):
         return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
@@ -93,7 +92,7 @@ class Response:
         self.success = success
 
     def __str__(self):
-        return "Response: next state: {}, message: {}, success: {}".format(self.state, self.message, self.success)
+        return "Response: state: {}, message: {}, success: {}".format(self.state, self.message, self.success)
 
 class Action:
     def __init__(self, log = None, validate_code = None, send_response = None):

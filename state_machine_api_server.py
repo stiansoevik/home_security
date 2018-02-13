@@ -1,5 +1,8 @@
 import flask
+import logging
 import state_machine
+
+logging.basicConfig(level = logging.DEBUG)
 
 app = flask.Flask(__name__)
 sm = state_machine.StateMachine()
@@ -10,7 +13,10 @@ def send_event(event):
         param = flask.request.get_json().get('param')
     else:
         param = None
+
     response = sm.update(event, param)
+    logging.debug("API: " + str(response))
+
     if response.success:
         code = 200
     else:

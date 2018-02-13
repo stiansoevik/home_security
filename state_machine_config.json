@@ -22,6 +22,15 @@
             ]
         },
         "ARMED": {
+            "transitions": [
+                { "event": "DISARM", "to_state": "ENTER_DISARM_CODE", "action": { "log": "Attempting to disarm" } }
+            ]
+        },
+        "ENTER_DISARM_CODE": {
+            "transitions": [
+                { "event": "USER_CODE", "condition": { "validate_code": 1234 }, "to_state": "DISARMED", "action": { "send_response": "Correct PIN, disarming" } },
+                { "event": "USER_CODE", "to_state": "ARMED", "action": { "send_response": "Incorrect PIN", "log": "Tried to disarm with incorrect PIN" } }
+            ]
         }
     },
 

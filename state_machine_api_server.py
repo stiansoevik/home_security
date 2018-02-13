@@ -16,6 +16,6 @@ def send_event(event):
     else:
         code = 400 # TODO Consider more fine-grained response codes
 
-    return flask.json.jsonify(state=response.next_state, message=response.message), code
+    return flask.json.jsonify(state=response.state, message=response.message), code
 
 

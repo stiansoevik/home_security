@@ -37,10 +37,10 @@ class StateMachine:
         response = self.current_state.handle_event(event, param)
         if response:
             logging.info(str(response))
-            self.set_state(response.next_state)
+            self.set_state(response.state)
             return response
         else:
-            return Response(next_state = self.current_state)
+            return Response(state = self.current_state)
 
     def __str__(self):
         return "State machine with states: " + ", ".join([str(s) for s in self.states])
@@ -87,13 +87,13 @@ class Transition:
         return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
 
 class Response:
-    def __init__(self, next_state = None, message = None, success = None):
-        self.next_state = next_state
+    def __init__(self, state = None, message = None, success = None):
+        self.state = state
         self.message = message
         self.success = success
 
     def __str__(self):
-        return "Response: Next state: {}, Message: {}, Success: {}".format(self.next_state, self.message, self.success)
+        return "Response: next state: {}, message: {}, success: {}".format(self.state, self.message, self.success)
 
 class Action:
     def __init__(self, log = None, validate_code = None, send_response = None):

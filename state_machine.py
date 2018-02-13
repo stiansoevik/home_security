@@ -50,9 +50,8 @@ class State:
     def handle_event(self, event, param = None):
         logging.info("Handling event: {}".format(event))
         for transition in self.transitions:
-            if transition.event == event:
-                if transition.check_condition(param):
-                    return transition.go(param)
+            if transition.check(event, param):
+                return transition.go(param)
         logging.warning("No matching event handlers found")
         return Response(state = self.name, message = "Invalid event", success = False)
 
@@ -61,27 +60,30 @@ class State:
 
 class Transition:
     def __init__(self, event = None, condition = None, to_state = None, action = None):
-        logging.debug("Creating transition @{} [{}] -> {}, {}".format(event, condition, to_state, action))
         self.event = event
         self.condition = Action(**condition) if condition else None
         self.to_state = to_state
         self.action = Action(**action) if action else None
+        logging.debug("Added transition {}".format(self))
 
-    def check_condition(self, param):
-        if not self.condition:
-            logging.debug("No condition, OK")
-            return True
-        else:
-            result = self.condition.execute(param)
-            logging.debug("Checking condition {} ({}): {}".format(self.condition, param, result))
-            return result
+    def check(self, event, param):
+        logging.debug("Checking transition {} against {} ({})".format(str(self), event, param))
+        if event == self.event:
+            if not self.condition:
+                logging.debug("No condition, OK")
+                return True
+            else:
+                result = self.condition.execute(param)
+                logging.debug("Checking condition {} ({}): {}".format(self.condition, param, result))
+                return result
+        return False
 
     def go(self, param):
         action_result = self.action.execute(param) if self.action else None
         return Response(state = self.to_state, message = action_result, success = True)
 
     def __str__(self):
-        return "@{} [{}]: -> {}".format(self.event, self.condition, self.to_state.name)
+        return "@{} [{}]: -> {} & {}".format(self.event, self.condition, self.to_state, self.action)
 
 class Response:
     def __init__(self, state = None, message = None, success = None):

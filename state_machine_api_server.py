@@ -2,7 +2,7 @@ import flask
 import logging
 import state_machine
 
-logging.basicConfig(level = logging.DEBUG)
+logging.basicConfig(level = logging.INFO)
 
 app = flask.Flask(__name__)
 sm = state_machine.StateMachine()

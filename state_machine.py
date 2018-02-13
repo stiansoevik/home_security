@@ -1,11 +1,9 @@
 #!/usr/bin/python
-# TODO Support configurable log levels
-# TODO Config file as parameter
 
 import json
 import logging
 
-logging.basicConfig(level = logging.DEBUG)
+logging.basicConfig(level = logging.INFO)
 
 class StateMachine:
     def __init__(self, config_file = 'state_machine_config.json'):

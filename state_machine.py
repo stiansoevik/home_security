@@ -1,8 +1,6 @@
 #!/usr/bin/python
-# TODO Support multiple transitions? How should responses work etc?
-# TODO Store PIN outside configuration file?
 # TODO Support configurable log levels
-# TODO Explicit transition priority?
+# TODO Config file as parameter
 
 import json
 import logging

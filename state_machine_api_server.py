@@ -16,10 +16,10 @@ def send_event(event):
 
     response = sm.handle_event(event, param)
 
-    if response.success:
+    if response.success: # Success is defined as state machine updated successfully, not e.g. correct PIN
         code = 200
     else:
-        code = 400 # TODO Consider more fine-grained response codes
+        code = 400
 
     return flask.json.jsonify(state=response.state, message=response.message), code
 
